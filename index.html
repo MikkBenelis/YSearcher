@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>YSearch! --- YouTube</title>
+		<meta charset="utf-8">
+		<meta name="author" content="Mikk">
+		<meta name="keywords" content="youtube video search">
+		<meta name="description" content="YouTube searcher!">
+		<link rel="stylesheet" href="css/style.css">
+		<link rel="icon" href="mimg/favicon.ico">
+	</head>
+
+	<body>
+	
+		<div id="container">
+
+			<div id="preloader"></div>
+
+			<div id="header">
+				<div class="logo">YSearch</div>
+				<input type="text" placeholder="Введите фразу для поиска..." id="search-field">
+				<input type="button" value="Найти" onclick="search()" disabled id="search-button">
+			</div>
+			
+			<ul id="video-slider">
+				<!--
+				<li class="element">
+					<a href="#"><img src="mimg/placeholder.png"></a>
+					<p class="title">Title</p>
+					<p class="description">Description</p>
+					<p class="publ">Дата публикации: <span class="publ-info">01.01.1980</span></p>
+					<p class="author">Автор: <span class="author-info">SlivkiShow</span></p>
+				</li>
+				-->
+			</ul>
+			
+		</div>
+		
+		<!-- GOOGLE API -->
+		<script src="https://apis.google.com/js/client.js"></script>
+		
+		<!-- LOCAL SCRIPTS -->
+		<script src="js/search.js"></script>
+		<script src="js/scripts.js"></script>
+
+	</body>
+</html>

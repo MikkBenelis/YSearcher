@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hello Analytics – краткое руководство по JavaScript</title>
+</head>
+<body>
+
+<button id="auth-button">Авторизация</button>
+
+<h1>Hello Analytics</h1>
+
+<textarea cols="80" rows="20" id="query-output"></textarea>
+
+<script>
+
+  // Замена на собственный идентификатор клиента из консоли разработчика.
+  var CLIENT_ID = '851220011291-jnan0lu6uru9bsvi4i2vsq0eq37kj7ei.apps.googleusercontent.com';
+
+  // Определение авторизованной области применения.
+  var SCOPES = ['https://www.googleapis.com/auth/analytics.readonly'];
+
+
+  function authorize(event) {
+    // Обработка потока авторизации.
+    // При вызове по нажатию кнопки переменной "immediate" должно быть присвоено значение "false".
+    var useImmdiate = event ? false : true;
+    var authData = {
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      immediate: useImmdiate
+    };
+
+    gapi.auth.authorize(authData, function(response) {
+      var authButton = document.getElementById('auth-button');
+      if (response.error) {
+        authButton.hidden = false;
+      }
+      else {
+        authButton.hidden = true;
+        queryAccounts();
+      }
+    });
+  }
+
+
+function queryAccounts() {
+  // Загрузка клиентской библиотеки Google Analytics.
+  gapi.client.load('analytics', 'v3').then(function() {
+
+    // Получение списка всех аккаунтов Google Analytics для этого пользователя.
+    gapi.client.analytics.management.accounts.list().then(handleAccounts);
+  });
+}
+
+
+function handleAccounts(response) {
+  // Обработка ответа от метода accounts.list.
+  if (response.result.items && response.result.items.length) {
+    // Получение первого аккаунта Google Analytics.
+    var firstAccountId = response.result.items[0].id;
+
+    // Запрос списка ресурсов.
+    queryProperties(firstAccountId);
+  } else {
+    console.log('No accounts found for this user.');
+  }
+}
+
+
+function queryProperties(accountId) {
+  // Получение списка всех ресурсов этого аккаунта.
+  gapi.client.analytics.management.webproperties.list(
+      {'accountId': accountId})
+    .then(handleProperties)
+    .then(null, function(err) {
+      // Запись всех ошибок в журнал.
+      console.log(err);
+  });
+}
+
+
+function handleProperties(response) {
+  // Обработка ответа от метода webproperties list.
+  if (response.result.items && response.result.items.length) {
+
+    // Получение первого аккаунта Google Analytics.
+    var firstAccountId = response.result.items[0].accountId;
+
+    // Получение идентификатора первого ресурса.
+    var firstPropertyId = response.result.items[0].id;
+
+    // Запрос представлений (профилей).
+    queryProfiles(firstAccountId, firstPropertyId);
+  } else {
+    console.log('No properties found for this user.');
+  }
+}
+
+
+function queryProfiles(accountId, propertyId) {
+  // Получение списка всех представлений (профилей) для первого ресурса
+  // первого аккаунта.
+  gapi.client.analytics.management.profiles.list({
+      'accountId': accountId,
+      'webPropertyId': propertyId
+  })
+  .then(handleProfiles)
+  .then(null, function(err) {
+      // Запись всех ошибок в журнал.
+      console.log(err);
+  });
+}
+
+
+function handleProfiles(response) {
+  // Обработка ответа от метода profiles list.
+  if (response.result.items && response.result.items.length) {
+    // Получение идентификатора первого представления (профиля).
+    var firstProfileId = response.result.items[0].id;
+
+    // Запрос к Core Reporting API.
+    queryCoreReportingApi(firstProfileId);
+  } else {
+    console.log('No views (profiles) found for this user.');
+  }
+}
+
+
+function queryCoreReportingApi(profileId) {
+  // Запрос к Core Reporting API о количестве сессий
+  // за последние семь дней.
+  gapi.client.analytics.data.ga.get({
+    'ids': 'ga:' + profileId,
+    'start-date': '7daysAgo',
+    'end-date': 'today',
+    'metrics': 'ga:sessions'
+  })
+  .then(function(response) {
+    var formattedJson = JSON.stringify(response.result, null, 2);
+    document.getElementById('query-output').value = formattedJson;
+  })
+  .then(null, function(err) {
+      // Запись всех ошибок в журнал.
+      console.log(err);
+  });
+}
+
+  // Добавление блока прослушивания событий к кнопке авторизации (auth-button).
+  document.getElementById('auth-button').addEventListener('click', authorize);
+</script>
+
+<script src="https://apis.google.com/js/client.js?onload=authorize"></script>
+
+</body>
+</html>
